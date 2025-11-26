@@ -1,26 +1,25 @@
 #!/bin/bash
-# This script is designed to run automatically upon node provisioning in CloudLab
-# or a similar environment. It ensures all dependencies and components are set up.
-set -e
+set -euo pipefail
 
-# --- 0. Install Prerequisite: Helm ---
-# Helm is mandatory for deploying OpenWhisk via its charts.
-echo "--- INSTALLING HELM (Kubernetes Package Manager) ---"
-curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+REPO="/local/repository"
+LOG="/local/repository/startup.log"
 
-# --- 1. Run Kubernetes Control Plane Setup ---
-echo "--- RUNNING KUBERNETES CONTROL PLANE SETUP (kubernetes.sh) ---"
-# This script handles all system configuration, Kubeadm init, and CNI installation.
-/bin/bash kubernetes.sh
+echo "=== startup.sh: BEGIN ===" | tee -a "$LOG"
 
-# A short delay is added to ensure the CNI is initialized before we try to deploy apps.
-echo "--- WAITING 60 SECONDS FOR CNI (Flannel) TO INITIALIZE ---"
-sleep 60
+# Ensure scripts are executable
+chmod +x "$REPO/kubernetes.sh" "$REPO/openwhisk.sh"
 
-# --- 2. Run OpenWhisk Deployment ---
-echo "--- RUNNING OPENWHISK DEPLOYMENT (openwhisk.sh) ---"
-# This script adds the repository, creates the configuration file, and deploys OpenWhisk.
-/bin/bash openwhisk.sh
+# Run Kubernetes control plane setup
+echo "--- Running kubernetes.sh ---" | tee -a "$LOG"
+sudo bash "$REPO/kubernetes.sh" 2>&1 | tee -a "$LOG"
 
-echo "--- PROFILE SETUP COMPLETE. CLUSTER AND OPENWHISK DEPLOYMENT STARTED. ---"
-echo "Check progress with 'kubectl get pods -A' and 'kubectl get pods -n openwhisk'."
+# Wait for node to be Ready (kubelet/kubeadm set up kubeconfig for the current user in kubernetes.sh)
+echo "--- Waiting for Kubernetes node to be Ready ---" | tee -a "$LOG"
+# wait up to 10 minutes
+kubectl wait --for=condition=Ready node --all --timeout=600s 2>&1 | tee -a "$LOG"
+
+# Run OpenWhisk deployment
+echo "--- Running openwhisk.sh ---" | tee -a "$LOG"
+bash "$REPO/openwhisk.sh" 2>&1 | tee -a "$LOG"
+
+echo "=== startup.sh: COMPLETE ===" | tee -a "$LOG"
