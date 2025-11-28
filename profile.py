@@ -2,8 +2,7 @@
 number of nodes.
 
 Instructions:
-Note: It can take upwards of 10 min. for the cluster to fully initialize. Thank you for your patience!
-For full documentation, see the GitHub repo: https://github.com/CU-BISON-LAB/cloudlab-openwhisk
+Note: It can take upwards of 10 min. for the cluster to fully initialize. 
 Output from the startup script is found at /home/openwhisk-kubernetes/start.log on all nodes
 """
 
