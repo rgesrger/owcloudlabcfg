@@ -2,7 +2,7 @@
 number of nodes.
 
 Instructions:
-Note: It can take upwards of 10 min. for the cluster to fully initialize. 
+Note: It can take upwards of 10 min. for the cluster to fully initialize. Thank you for your patience!
 Output from the startup script is found at /home/openwhisk-kubernetes/start.log on all nodes
 """
 
